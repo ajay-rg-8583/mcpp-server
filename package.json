@@ -1,0 +1,32 @@
+{
+  "name": "zoho-creator-mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@types/node": "^22.15.21",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jaro-winkler": "^0.2.8",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/jaro-winkler": "^0.2.4",
+    "concurrently": "^7.6.0",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/zoho-creator-mcpp-server.js\"",
+    "start": "node dist/zoho-creator-mcpp-server.js",
+    "build": "npm run build:mcpp-core && tsc",
+    "build:mcpp-core": "cd src/mcpp-core && npm run build",
+    "start:creator": "node dist/zoho-creator-mcpp-server.js",
+    "start:crm": "node dist/zoho-crm-mcpp-server.js",
+    "start:all": "concurrently \"npm:start:creator\" \"npm:start:crm\"",
+    "debug:creator": "node --inspect=9229 dist/zoho-creator-mcpp-server.js",
+    "debug:crm": "node --inspect=9230 dist/zoho-crm-mcpp-server.js"
+  }
+}

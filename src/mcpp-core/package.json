@@ -1,0 +1,51 @@
+{
+  "name": "@your-username/mcpp-core",
+  "version": "1.0.0",
+  "description": "Model Context Privacy Protocol (MCPP) core utilities - Privacy-enhanced data handling for MCP servers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/mcpp-core.git"
+  },
+  "homepage": "https://github.com/your-username/mcpp-core#readme",
+  "bugs": {
+    "url": "https://github.com/your-username/mcpp-core/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcpp",
+    "mcp",
+    "privacy",
+    "protocol",
+    "data-protection",
+    "model-context-protocol",
+    "privacy-enhanced",
+    "data-caching",
+    "placeholders"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "jaro-winkler": "^0.2.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/jaro-winkler": "^0.2.4"
+  }
+}
