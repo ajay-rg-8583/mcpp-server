@@ -25,8 +25,10 @@
     "build:mcpp-core": "cd src/mcpp-core && npm run build",
     "start:creator": "node dist/zoho-creator-mcpp-server.js",
     "start:crm": "node dist/zoho-crm-mcpp-server.js",
-    "start:all": "concurrently \"npm:start:creator\" \"npm:start:crm\"",
+    "start:books": "node dist/zoho-books-mcpp-server.js",
+    "start:all": "concurrently \"npm:start:creator\" \"npm:start:crm\" \"npm:start:books\"",
     "debug:creator": "node --inspect=9229 dist/zoho-creator-mcpp-server.js",
-    "debug:crm": "node --inspect=9230 dist/zoho-crm-mcpp-server.js"
+    "debug:crm": "node --inspect=9230 dist/zoho-crm-mcpp-server.js",
+    "debug:books": "node --inspect=9231 dist/zoho-books-mcpp-server.js"
   }
 }

@@ -303,7 +303,7 @@ const ZOHO_TOOLS: Tool[] = [
     },
     {
         name: "get_crm_module_records",
-        description: "Get records from a module in Zoho CRM with specified fields",
+        description: "Get records from a module in Zoho CRM with specified fields. Optionally get a specific record by providing record_id.",
         isSensitive: true,
         dataPolicy: {
             data_usage_permissions: {
@@ -325,7 +325,8 @@ const ZOHO_TOOLS: Tool[] = [
             required: ["module_api_name", "fields"], 
             properties: { 
                 module_api_name: { type: "string", description: "The API name of the module to get records from (e.g., Leads, Contacts, Accounts)." },
-                fields: { type: "string", description: "Comma-separated list of field API names to retrieve (e.g., 'Last_Name,Email,Record_Status__s,Converted__s,Converted_Date_Time'). This parameter is mandatory." }
+                fields: { type: "string", description: "Comma-separated list of field API names to retrieve (e.g., 'Last_Name,Email,Record_Status__s,Converted__s,Converted_Date_Time'). This parameter is mandatory. * cannot be used. Required fieldnames should be in comma seperated values." },
+                record_id: { type: "string", description: "Optional. The ID of a specific record to retrieve. If provided, only this record will be fetched instead of all records." }
             } 
         },
     },
@@ -390,6 +391,41 @@ const ZOHO_TOOLS: Tool[] = [
             properties: { 
                 module_api_name: { type: "string", description: "The API name of the module." }, 
                 record_id: { type: "string", description: "The ID of the record to delete." } 
+            } 
+        },
+    },
+    {
+        name: "search_crm_module_records",
+        description: "Search for records in a Zoho CRM module using criteria-based filtering",
+        isSensitive: true,
+        dataPolicy: {
+            data_usage_permissions: {
+                display: 'allow',
+                process: 'allow',
+                store: 'prompt',
+                transfer: 'prompt'
+            },
+            target_permissions: {
+                allowed_targets: ['internal_llm', 'claude-3'], // Allow only trusted targets for sensitive CRM data
+                blocked_targets: ['gpt-4'] // Block specific targets for sensitive customer data
+            },
+            consent_overrides: {
+                custom_consent_message: "This operation will search and access sensitive CRM records. The data may contain personal information including names, emails, and contact details. Do you want to proceed?"
+            }
+        },
+        inputSchema: { 
+            type: "object", 
+            required: ["module_api_name", "criteria"], 
+            properties: { 
+                module_api_name: { type: "string", description: "The API name of the module to search in (e.g., Leads, Contacts, Accounts)." },
+                criteria: { 
+                    type: "string", 
+                    description: "Search criteria in the format: (({field_API_name}:{operator}:{value}) and/or ({field_API_name}:{operator}:{value})). Maximum 10 criteria allowed. Supported operators: equals, starts_with, in, not_equal, greater_equal, greater_than, less_equal, less_than, between. Examples: '((Last_Name:equals:Smith) and (First_Name:starts_with:J))' or '(Company:equals:ABC)' or '(Full_Name:in:Patricia,Boyle,Kate)'" 
+                },
+                fields: { 
+                    type: "string", 
+                    description: "Optional. Comma-separated list of field API names to retrieve in the response. If not specified, all fields will be returned." 
+                }
             } 
         },
     },
@@ -544,7 +580,17 @@ async function callToolHandler(request: any) {
   
         const moduleApiName = resolvedArgs.module_api_name as string;
         const fields = resolvedArgs.fields as string;
-        const url = `${ZOHO_API_BASE_URL}/${moduleApiName}?fields=${encodeURIComponent(fields)}`;
+        const recordId = resolvedArgs.record_id as string | undefined;
+        
+        // Build URL based on whether record_id is provided
+        let url: string;
+        if (recordId) {
+            // Get specific record
+            url = `${ZOHO_API_BASE_URL}/${moduleApiName}/${recordId}?fields=${encodeURIComponent(fields)}`;
+        } else {
+            // Get all records
+            url = `${ZOHO_API_BASE_URL}/${moduleApiName}?fields=${encodeURIComponent(fields)}`;
+        }
         
         console.log(`Fetching from URL: ${url}`);
         const response = await fetch(url, { method: "GET", headers });
@@ -555,7 +601,8 @@ async function callToolHandler(request: any) {
         
         const data = await response.json() as any;
         const standardizedData = convertToTableFormat(data.data || []);
-        return processDataResponse(tool, tool_call_id as string, standardizedData, 'records');
+        const itemKind = recordId ? 'record' : 'records';
+        return processDataResponse(tool, tool_call_id as string, standardizedData, itemKind);
     }
     else if (name === "add_record_in_crm_module") {
         const validation = validateRequiredParameters(resolvedArgs, ["module_api_name", "data"]);
@@ -639,6 +686,38 @@ async function callToolHandler(request: any) {
         return {
           content: [{ type: "text", text: JSON.stringify(responseData, null, 2) }],
         };
+    }
+    else if (name === "search_crm_module_records") {
+        const validation = validateRequiredParameters(resolvedArgs, ["module_api_name", "criteria"]);
+        if (!validation.isValid) {
+          return {
+              content: [{ type: "text", text: JSON.stringify(validation.errorPayload, null, 2) }],
+              isError: true,
+          };
+        }
+  
+        const moduleApiName = resolvedArgs.module_api_name as string;
+        const criteria = resolvedArgs.criteria as string;
+        const fields = resolvedArgs.fields as string | undefined;
+        
+        // Build URL with criteria
+        let url = `${ZOHO_API_BASE_URL}/${moduleApiName}/search?criteria=${encodeURIComponent(criteria)}`;
+        
+        // Add fields parameter if provided
+        if (fields) {
+            url += `&fields=${encodeURIComponent(fields)}`;
+        }
+        
+        console.log(`Searching from URL: ${url}`);
+        const response = await fetch(url, { method: "GET", headers });
+  
+        if (!response.ok) {
+          return await handleApiError(response);
+        }
+        
+        const data = await response.json() as any;
+        const standardizedData = convertToTableFormat(data.data || []);
+        return processDataResponse(tool, tool_call_id as string, standardizedData, 'search results');
     }
 
     // Fallback for unknown tool

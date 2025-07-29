@@ -2,7 +2,7 @@
 export { Tool, McppUsageContext, McppServerConfig, DataUsage } from './mcpp-types.js';
 export { MCPP_ERRORS } from './mcpp-errors.js';
 export { dataCache } from './mcpp-cache.js';
-export { convertToTableFormat, processDataResponse } from './mcpp-data-utils.js';
+export { convertToTableFormat, convertToExpandedTableFormat, convertToCompactTableFormat, processDataResponse } from './mcpp-data-utils.js';
 export { resolveArgumentPlaceholders } from './mcpp-placeholders.js';
 export { handleGetData, handleFindReference, handleResolvePlaceholders, handleProvideConsent } from './mcpp-endpoints.js';
 export { validateDataAccess, validateDataUsage, checkConsentRequired } from './mcpp-validation.js';
